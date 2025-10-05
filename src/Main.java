@@ -5,6 +5,8 @@ public class Main
     public static void main(String[] args)
     {
         Scanner sc = new Scanner(System.in);
+        BankAccount account = null;
+        int nextId = 1;
 
         while (true)
         {
@@ -23,7 +25,16 @@ public class Main
             switch (input)
             {
                 case "1":
-                    System.out.println("Открыть счёт (сделать)");
+                    if (account == null)
+                    {
+                        account = new BankAccount(nextId);
+                        nextId++;
+                        System.out.println("Счёт открыт. Id: " + account.getId());
+                    }
+                    else
+                    {
+                        System.out.println("Счёт уже открыт. Id: " + account.getId());
+                    }
                     break;
                 case "2":
                     System.out.println("Положить деньги (сделать)");
@@ -32,7 +43,14 @@ public class Main
                     System.out.println("Снять деньги (сделать)");
                     break;
                 case "4":
-                    System.out.println("Показать баланс (сделать)");
+                    if (account == null)
+                    {
+                        System.out.println("Счёт не открыт. Сначала откройте счёт (пункт 1).");
+                    }
+                    else
+                    {
+                        System.out.println("Баланс счёта (id " + account.getId() + "): " + account.getBalance());
+                    }
                     break;
                 case "5":
                     System.out.println("Список транзакций (сделать)");
