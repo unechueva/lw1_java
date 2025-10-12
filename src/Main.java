@@ -1,4 +1,5 @@
 import java.util.Scanner;
+import java.util.List;
 
 public class Main
 {
@@ -37,10 +38,63 @@ public class Main
                     }
                     break;
                 case "2":
-                    System.out.println("Положить деньги (сделать)");
+                    if (account == null)
+                    {
+                        System.out.println("Счёт не открыт. Сначала откройте счёт (пункт 1).");
+                        break;
+                    }
+                    System.out.print("Введите сумму для пополнения (целое число): ");
+                    String depositStr = sc.nextLine();
+                    try
+                    {
+                        int amount = Integer.parseInt(depositStr);
+                        if (amount <= 0)
+                        {
+                            System.out.println("Сумма должна быть положительным целым числом.");
+                        }
+                        else
+                        {
+                            account.deposit(amount);
+                            System.out.println("Успешно. Новый баланс: " + account.getBalance());
+                        }
+                    }
+                    catch (NumberFormatException e)
+                    {
+                        System.out.println("Неверный формат суммы. Введите целое число.");
+                    }
                     break;
                 case "3":
-                    System.out.println("Снять деньги (сделать)");
+                    if (account == null)
+                    {
+                        System.out.println("Счёт не открыт. Сначала откройте счёт (пункт 1).");
+                        break;
+                    }
+                    System.out.print("Введите сумму для снятия (целое число): ");
+                    String withdrawStr = sc.nextLine();
+                    try
+                    {
+                        int amount = Integer.parseInt(withdrawStr);
+                        if (amount <= 0)
+                        {
+                            System.out.println("Сумма должна быть положительным целым числом.");
+                        }
+                        else
+                        {
+                            boolean ok = account.withdraw(amount);
+                            if (ok)
+                            {
+                                System.out.println("Снятие успешно. Новый баланс: " + account.getBalance());
+                            }
+                            else
+                            {
+                                System.out.println("Операция запрещена: недостаточно средств.");
+                            }
+                        }
+                    }
+                    catch (NumberFormatException e)
+                    {
+                        System.out.println("Неверный формат суммы. Введите целое число.");
+                    }
                     break;
                 case "4":
                     if (account == null)
@@ -53,10 +107,27 @@ public class Main
                     }
                     break;
                 case "5":
-                    System.out.println("Список транзакций (сделать)");
+                    if (account == null)
+                    {
+                        System.out.println("Счёт не открыт. Транзакций нет.");
+                        break;
+                    }
+                    List<Transaction> list = account.getTransactions();
+                    if (list.isEmpty())
+                    {
+                        System.out.println("Список транзакций пуст.");
+                    }
+                    else
+                    {
+                        System.out.println("Транзакции:");
+                        for (Transaction t : list)
+                        {
+                            System.out.println(t.toString());
+                        }
+                    }
                     break;
                 case "6":
-                    System.out.println("Поиск по атрибутам (сделать)");
+                    System.out.println("Поиск по атрибутам (ещё не реализован)");
                     break;
                 case "7":
                     System.out.println("До свидания!");
