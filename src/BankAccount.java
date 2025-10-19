@@ -1,5 +1,6 @@
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.List;
 
 public class BankAccount
 {
@@ -54,5 +55,59 @@ public class BankAccount
             return true;
         }
         return false;
+    }
+
+    public List<Transaction> findByAmount(int amount)
+    {
+        List<Transaction> res = new ArrayList<>();
+        for (Transaction t : transactions)
+        {
+            if (t.getAmount() == amount)
+            {
+                res.add(t);
+            }
+        }
+        return res;
+    }
+
+    public List<Transaction> findByAmountRange(int min, int max)
+    {
+        List<Transaction> res = new ArrayList<>();
+        for (Transaction t : transactions)
+        {
+            int a = t.getAmount();
+            if (a >= min && a <= max)
+            {
+                res.add(t);
+            }
+        }
+        return res;
+    }
+
+    public List<Transaction> findByType(String type)
+    {
+        List<Transaction> res = new ArrayList<>();
+        for (Transaction t : transactions)
+        {
+            if (t.getType().equalsIgnoreCase(type))
+            {
+                res.add(t);
+            }
+        }
+        return res;
+    }
+
+    public List<Transaction> findByDateRange(LocalDateTime from, LocalDateTime to)
+    {
+        List<Transaction> res = new ArrayList<>();
+        for (Transaction t : transactions)
+        {
+            LocalDateTime time = t.getTime();
+            if ((time.isEqual(from) || time.isAfter(from)) && (time.isEqual(to) || time.isBefore(to)))
+            {
+                res.add(t);
+            }
+        }
+        return res;
     }
 }
