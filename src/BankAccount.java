@@ -1,4 +1,5 @@
-import java.time.LocalDateTime;
+import java.io.*;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -7,7 +8,7 @@ public class BankAccount
     private int id;
     private int balance;
     private boolean opened;
-    private ArrayList<Transaction> transactions;
+    private List<Transaction> transactions;
 
     public BankAccount(int id)
     {
@@ -32,26 +33,26 @@ public class BankAccount
         return opened;
     }
 
-    public ArrayList<Transaction> getTransactions()
+    public List<Transaction> getTransactions()
     {
         return transactions;
     }
 
-    public void deposit(int amount)
+    public void deposit(LocalDate date, int amount)
     {
         if (amount > 0)
         {
             balance += amount;
-            transactions.add(new Transaction(LocalDateTime.now(), "DEPOSIT", amount));
+            transactions.add(new Transaction(date, "DEPOSIT", amount));
         }
     }
 
-    public boolean withdraw(int amount)
+    public boolean withdraw(LocalDate date, int amount)
     {
         if (amount > 0 && amount <= balance)
         {
             balance -= amount;
-            transactions.add(new Transaction(LocalDateTime.now(), "WITHDRAW", amount));
+            transactions.add(new Transaction(date, "WITHDRAW", amount));
             return true;
         }
         return false;
@@ -63,9 +64,7 @@ public class BankAccount
         for (Transaction t : transactions)
         {
             if (t.getAmount() == amount)
-            {
                 res.add(t);
-            }
         }
         return res;
     }
@@ -75,11 +74,8 @@ public class BankAccount
         List<Transaction> res = new ArrayList<>();
         for (Transaction t : transactions)
         {
-            int a = t.getAmount();
-            if (a >= min && a <= max)
-            {
+            if (t.getAmount() >= min && t.getAmount() <= max)
                 res.add(t);
-            }
         }
         return res;
     }
@@ -90,24 +86,101 @@ public class BankAccount
         for (Transaction t : transactions)
         {
             if (t.getType().equalsIgnoreCase(type))
-            {
                 res.add(t);
-            }
         }
         return res;
     }
 
-    public List<Transaction> findByDateRange(LocalDateTime from, LocalDateTime to)
+    public List<Transaction> findByDateRange(LocalDate from, LocalDate to)
     {
         List<Transaction> res = new ArrayList<>();
         for (Transaction t : transactions)
         {
-            LocalDateTime time = t.getTime();
-            if ((time.isEqual(from) || time.isAfter(from)) && (time.isEqual(to) || time.isBefore(to)))
-            {
+            LocalDate d = t.getDate();
+            if ((d.isEqual(from) || d.isAfter(from)) && (d.isEqual(to) || d.isBefore(to)))
                 res.add(t);
-            }
         }
         return res;
+    }
+
+    public void saveToFile()
+    {
+        try
+        {
+            File dir = new File("data");
+            if (!dir.exists()) dir.mkdir();
+
+            File accFile = new File(dir, "account.txt");
+            try (PrintWriter pw = new PrintWriter(accFile))
+            {
+                pw.println(id);
+                pw.println(balance);
+                pw.println(opened);
+            }
+
+            File trFile = new File(dir, "transactions.txt");
+            try (PrintWriter pw = new PrintWriter(trFile))
+            {
+                for (Transaction t : transactions)
+                {
+                    pw.println(t.getDate().toString() + ";" + t.getType() + ";" + t.getAmount());
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            System.out.println("Ошибка при сохранении данных: " + e.getMessage());
+        }
+    }
+
+    public static BankAccount loadFromFile()
+    {
+        try
+        {
+            File dir = new File("data");
+            File accFile = new File(dir, "account.txt");
+            File trFile = new File(dir, "transactions.txt");
+
+            if (!accFile.exists() || !trFile.exists())
+                return null;
+
+            BufferedReader br = new BufferedReader(new FileReader(accFile));
+            String line;
+            line = br.readLine();
+            if (line == null) { br.close(); return null; }
+            int id = Integer.parseInt(line);
+            line = br.readLine();
+            if (line == null) { br.close(); return null; }
+            int balance = Integer.parseInt(line);
+            line = br.readLine();
+            if (line == null) { br.close(); return null; }
+            boolean opened = Boolean.parseBoolean(line);
+            br.close();
+
+            BankAccount account = new BankAccount(id);
+            account.balance = balance;
+            account.opened = opened;
+
+            br = new BufferedReader(new FileReader(trFile));
+            while ((line = br.readLine()) != null)
+            {
+                String[] parts = line.split(";");
+                if (parts.length == 3)
+                {
+                    LocalDate date = LocalDate.parse(parts[0]);
+                    String type = parts[1];
+                    int amount = Integer.parseInt(parts[2]);
+                    account.transactions.add(new Transaction(date, type, amount));
+                }
+            }
+            br.close();
+
+            return account;
+        }
+        catch (Exception e)
+        {
+            System.out.println("Ошибка при загрузке данных: " + e.getMessage());
+            return null;
+        }
     }
 }

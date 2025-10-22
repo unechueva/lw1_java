@@ -1,21 +1,22 @@
-import java.time.LocalDateTime;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 public class Transaction
 {
-    private LocalDateTime time;
+    private LocalDate date;
     private String type;
     private int amount;
 
-    public Transaction(LocalDateTime time, String type, int amount)
+    public Transaction(LocalDate date, String type, int amount)
     {
-        this.time = time;
+        this.date = date;
         this.type = type;
         this.amount = amount;
     }
 
-    public LocalDateTime getTime()
+    public LocalDate getDate()
     {
-        return time;
+        return date;
     }
 
     public String getType()
@@ -30,6 +31,7 @@ public class Transaction
 
     public String toString()
     {
-        return time.toString() + " | " + type + " | " + amount;
+        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+        return fmt.format(date) + " | " + type + " | " + amount;
     }
 }

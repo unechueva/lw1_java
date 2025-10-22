@@ -1,6 +1,6 @@
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Scanner;
 
@@ -9,8 +9,15 @@ public class Main
     public static void main(String[] args)
     {
         Scanner sc = new Scanner(System.in);
-        BankAccount account = null;
-        int nextId = 1;
+
+        BankAccount account = BankAccount.loadFromFile();
+        int nextId = (account == null) ? 1 : account.getId() + 1;
+        if (account != null)
+        {
+            System.out.println("Данные успешно загружены. Текущий баланс: " + account.getBalance());
+        }
+
+        DateTimeFormatter dayFmt = DateTimeFormatter.ofPattern("dd-MM-yyyy");
 
         while (true)
         {
@@ -46,10 +53,18 @@ public class Main
                         System.out.println("Счёт не открыт. Сначала откройте счёт (пункт 1).");
                         break;
                     }
-                    System.out.print("Введите сумму для пополнения (целое число): ");
-                    String depositStr = sc.nextLine();
+                    System.out.print("Введите дату операции (dd-MM-yyyy) или 'today': ");
+                    String depDateStr = sc.nextLine();
                     try
                     {
+                        LocalDate depDate;
+                        if (depDateStr.trim().isEmpty() || depDateStr.equalsIgnoreCase("today") || depDateStr.equalsIgnoreCase("сегодня"))
+                            depDate = LocalDate.now();
+                        else
+                            depDate = LocalDate.parse(depDateStr, dayFmt);
+
+                        System.out.print("Введите сумму для пополнения (целое число): ");
+                        String depositStr = sc.nextLine();
                         int amount = Integer.parseInt(depositStr);
                         if (amount <= 0)
                         {
@@ -57,13 +72,17 @@ public class Main
                         }
                         else
                         {
-                            account.deposit(amount);
+                            account.deposit(depDate, amount);
                             System.out.println("Успешно. Новый баланс: " + account.getBalance());
                         }
                     }
                     catch (NumberFormatException e)
                     {
                         System.out.println("Неверный формат суммы. Введите целое число.");
+                    }
+                    catch (DateTimeParseException e)
+                    {
+                        System.out.println("Неверный формат даты. Введите dd-MM-yyyy или 'today'.");
                     }
                     break;
 
@@ -73,10 +92,18 @@ public class Main
                         System.out.println("Счёт не открыт. Сначала откройте счёт (пункт 1).");
                         break;
                     }
-                    System.out.print("Введите сумму для снятия (целое число): ");
-                    String withdrawStr = sc.nextLine();
+                    System.out.print("Введите дату операции (dd-MM-yyyy) или 'today': ");
+                    String wdDateStr = sc.nextLine();
                     try
                     {
+                        LocalDate wdDate;
+                        if (wdDateStr.trim().isEmpty() || wdDateStr.equalsIgnoreCase("today") || wdDateStr.equalsIgnoreCase("сегодня"))
+                            wdDate = LocalDate.now();
+                        else
+                            wdDate = LocalDate.parse(wdDateStr, dayFmt);
+
+                        System.out.print("Введите сумму для снятия (целое число): ");
+                        String withdrawStr = sc.nextLine();
                         int amount = Integer.parseInt(withdrawStr);
                         if (amount <= 0)
                         {
@@ -84,7 +111,7 @@ public class Main
                         }
                         else
                         {
-                            boolean ok = account.withdraw(amount);
+                            boolean ok = account.withdraw(wdDate, amount);
                             if (ok)
                             {
                                 System.out.println("Снятие успешно. Новый баланс: " + account.getBalance());
@@ -98,6 +125,10 @@ public class Main
                     catch (NumberFormatException e)
                     {
                         System.out.println("Неверный формат суммы. Введите целое число.");
+                    }
+                    catch (DateTimeParseException e)
+                    {
+                        System.out.println("Неверный формат даты. Введите dd-MM-yyyy или 'today'.");
                     }
                     break;
 
@@ -143,7 +174,7 @@ public class Main
                     System.out.println("1 - По точной сумме");
                     System.out.println("2 - По диапазону сумм");
                     System.out.println("3 - По типу (DEPOSIT/WITHDRAW)");
-                    System.out.println("4 - По диапазону дат (гггг-мм-дд)");
+                    System.out.println("4 - По диапазону дат (dd-MM-yyyy)");
                     System.out.print("Выбор: ");
                     String sChoice = sc.nextLine();
                     switch (sChoice)
@@ -200,29 +231,37 @@ public class Main
                             }
                             break;
                         case "4":
-                            System.out.print("Введите начальную дату (гггг-мм-дд): ");
+                            System.out.print("Введите начальную дату (dd-MM-yyyy) или 'today': ");
                             String fromStr = sc.nextLine();
-                            System.out.print("Введите конечную дату (гггг-мм-дд): ");
+                            System.out.print("Введите конечную дату (dd-MM-yyyy) или 'today': ");
                             String toStr = sc.nextLine();
                             try
                             {
-                                LocalDate fromDate = LocalDate.parse(fromStr);
-                                LocalDate toDate = LocalDate.parse(toStr);
-                                LocalDateTime fromDT = fromDate.atStartOfDay();
-                                LocalDateTime toDT = toDate.atTime(LocalTime.MAX);
-                                if (fromDT.isAfter(toDT))
+                                LocalDate fromDate;
+                                LocalDate toDate;
+                                if (fromStr.trim().isEmpty() || fromStr.equalsIgnoreCase("today") || fromStr.equalsIgnoreCase("сегодня"))
+                                    fromDate = LocalDate.now();
+                                else
+                                    fromDate = LocalDate.parse(fromStr, dayFmt);
+
+                                if (toStr.trim().isEmpty() || toStr.equalsIgnoreCase("today") || toStr.equalsIgnoreCase("сегодня"))
+                                    toDate = LocalDate.now();
+                                else
+                                    toDate = LocalDate.parse(toStr, dayFmt);
+
+                                if (fromDate.isAfter(toDate))
                                 {
                                     System.out.println("Начальная дата позже конечной.");
                                 }
                                 else
                                 {
-                                    List<Transaction> res = account.findByDateRange(fromDT, toDT);
+                                    List<Transaction> res = account.findByDateRange(fromDate, toDate);
                                     printSearchResult(res);
                                 }
                             }
-                            catch (Exception e)
+                            catch (DateTimeParseException e)
                             {
-                                System.out.println("Неверный формат даты. Используйте гггг-мм-дд.");
+                                System.out.println("Неверный формат даты. Используйте dd-MM-yyyy или 'today'.");
                             }
                             break;
                         default:
@@ -233,6 +272,11 @@ public class Main
 
                 case "0":
                     System.out.println("Выход из программы...");
+                    if (account != null)
+                    {
+                        account.saveToFile();
+                        System.out.println("Данные сохранены.");
+                    }
                     return;
 
                 default:
